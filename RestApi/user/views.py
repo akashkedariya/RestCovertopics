@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import CustomUser, Customers, Product
+from .models import CustomUser, Customers, Product, Project, ProjectManager, Developer
 from .serializers import CustomUserSerializers,CustomUserloginSerializers, CustomerSerializer
 from django.http import Http404
 from rest_framework.views import APIView
@@ -239,3 +239,77 @@ class Pagination2(APIView):         # Pagination : 2
         
         return paginator.get_paginated_response(serializer.data)
 
+from django.db.models import Count
+from django.db.models import Sum, Avg, Max
+class get_foreign_data(APIView) :
+
+    def get(self, request) :
+
+        # authors = Product.objects.annotate(num_prod = Count('customers'))
+        authors = Product.objects.annotate(num_prod = Avg('price'))        
+        print('===authors=11===',authors)
+
+        user = ProjectManager.objects.get(id = 1)
+        print('===user===',user)
+        # manager_data = user.projects.all()
+
+        user2 = Developer.objects.get(id = 2)
+        print('===user2===',user2)
+
+        manager_data = user2.developer.all()
+
+        for i in manager_data:
+            print('====i===',i.name)
+
+
+        # if chack_data == True:    
+        #     print('=====True=Exist===')
+
+        # elif chack_data == False :
+        #     print('=====False==Not exist======')
+        
+        # order_data = Product.objects.aggregate(total_price=Sum('quantity'))
+        # # data = Product.objects.aggregate(Sum('quantity'))
+        # # authors = Product.objects.annotate(num_prod = Count('customers'))
+        # authors = Product.objects.annotate(num_prod = Count('customers'),average_cus = Avg('customers__price'))
+        # # authors = Product.objects.annotate(num_prod = Count('customers'),average_cus = Max('customers__price'))
+
+        # print('=====authors==ist======',authors)
+        # authors = Product.objects.annotate(num_prod = Count('customers'),average_cus = Avg('customers__price'))    
+    
+        # for i in authors :
+        #     print('====ii====',i.product_name, '==', i.average_cu)
+
+
+
+
+        # user = CustomUser.objects.get(f_name = 'Parth')
+        # print('======user======',user)
+        # created_project = user.reviewed_projects.all()
+
+        # print('-=========createdproject======/',created_project)
+
+        # for pr in created_project :
+        #     print('====pr===',pr.creator, pr.project_name)
+
+        # data = Customers.objects.all()
+        data_list = []
+        data_dict = {}
+        # for dt in 'order_data':
+        #     # print('==========dt======',dt.product.id)
+
+        #     data_dict = {
+
+        #         'customer_id' : dt.customer_id,
+        #         'first_name' : dt.first_name,
+        #         'phone' : dt.phone,
+        #         'price' : dt.price,
+        #         'product_id' : dt.product.id,
+        #         'product_name' : dt.product.product_name,
+        #         'product_quantity' : dt.product.quantity
+
+        #     }
+
+        #     data_list.append(data_dict)
+
+        return Response({'data':'data_list'})

@@ -11,7 +11,8 @@ urlpatterns = [
     path('add-customer/',views.CustomerView.as_view()),
     path('add-customer/<int:pk>/',views.CustomerView.as_view()),
     path('pagination1/', views.Pagination1.as_view()),
-    path('pagination2/',views.Pagination2.as_view())
+    path('pagination2/',views.Pagination2.as_view()),
+    path('foreign_data/',views.get_foreign_data.as_view())
     
 
 ]

@@ -59,15 +59,29 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email  
-    
+        return self.email 
+
+
+# class Project(models.Model):
+#     creator = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='created_projects')
+#     assigned_user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_projects')
+#     reviewer = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_projects')
+
+#     project_name = models.CharField(max_length=255)
+#     description = models.TextField(blank=True)
+
+#     def __str__(self):
+#         return self.project_name
+
 
 class Product(models.Model):
     product_name = models.CharField(max_length=250,null=True)
     price = models.IntegerField()
     quantity = models.IntegerField()
 
-
+    def __str__(self):
+        return self.product_name
+    
 
 class Customers(models.Model):
     customer_id = models.AutoField(primary_key=True)
@@ -79,3 +93,27 @@ class Customers(models.Model):
     product = models.ForeignKey(Product, on_delete = models.CASCADE, null=True)
    
        
+# ===========================================================================================
+
+class ProjectManager(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='project_manager')
+    department = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.user.f_name
+
+class Developer(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='developer')
+    expertise = models.CharField(max_length=100,null=True)
+
+    def __str__(self):
+        return self.user.email
+
+class Project(models.Model):
+    name = models.CharField(max_length=255,null=True)
+    description = models.TextField(blank=True)
+    project_manager = models.ForeignKey(ProjectManager, on_delete=models.CASCADE, related_name='projects')
+    developers = models.ForeignKey(Developer, on_delete=models.CASCADE, related_name='developer')
+
+    def __str__(self):
+        return self.name
