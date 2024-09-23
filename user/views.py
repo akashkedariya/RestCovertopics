@@ -16,6 +16,8 @@ from rest_framework.pagination import PageNumberPagination
 # from .pagination import CustomPageNumberPagination
 from django.db.models import Count
 from django.db.models import Sum, Avg, Max
+from rest_framework.decorators import api_view
+
 
 
 
@@ -276,11 +278,72 @@ class DeveloperList(generics.ListCreateAPIView):
     serializer_class = DeveloperSerializer
     # print('===serializer_class=====',serializer_class)
 
+    def list(self, request):
+        # Note the use of `get_queryset()` instead of `self.queryset`
+        queryset = self.get_queryset()
+        print('===queryset====',queryset)
+        serializer = DeveloperSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class DeveloperUD(generics.RetrieveUpdateDestroyAPIView):
     queryset = Developer.objects.all()
     serializer_class = DeveloperSerializer
     lookup_field = 'id'
+
+
+# ======Custom decorators ===============================================================================
+from django.utils.decorators import method_decorator
+from functools import wraps
+
+# def custom_authentication_required(view_func):
+#     @wraps(view_func)
+#     def wrapper(request, *args, **kwargs):
+#         print('===user==',request.user)
+
+#         if not CustomUser.objects.filter(email = request.user).exists():  # try role wise user
+
+#             return Response(
+#                 {'detail': 'User not valid'},
+#                 status=status.HTTP_403_FORBIDDEN
+#             )
+#         return view_func(request)
+#     return wrapper
+
+def custom_authentication_required(view_func):
+    # @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        print('===user==',request.user)
+
+        if not CustomUser.objects.filter(email = '22developer1@gmail.com').exists():  # try role wise user
+
+            return Response(
+                {'detail': 'User not valid'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return view_func(request)
+    return wrapper        
+
+# ----CBV-----------------------------------------------------
+
+class DecoratorsAPI(APIView):
+    @method_decorator(custom_authentication_required)
+    def get(self,request):
+
+        return Response({'User': 'User success'})    
+    
+
+# ----FBV-----------------------------------------------------
+
+@api_view(['POST','GET'])
+@custom_authentication_required
+def demo_decorators(request):
+    if request.method == 'POST':
+
+        return Response({'msg' : 'success '})
+
+# ======Custom decorators ===============================================================================
+
 
 
 class Pagination1(APIView):     # Pagination : 1
