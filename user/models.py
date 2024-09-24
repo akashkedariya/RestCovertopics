@@ -140,7 +140,7 @@ class Project(models.Model):
     
     name = models.CharField(max_length=255,null=True)
     description = models.TextField(blank=True)
-    project_manager = models.ForeignKey(ProjectManager, on_delete=models.CASCADE)
+    project_manager = models.ForeignKey(ProjectManager, on_delete=models.CASCADE,related_name = 'project')
     developers = models.ForeignKey(Developer, on_delete=models.CASCADE)
 
     def __str__(self):                                              

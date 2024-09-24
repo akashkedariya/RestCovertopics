@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import CustomUser, Customers, Product, Project, ProjectManager, Developer
-from .serializers import CustomUserSerializers,CustomUserloginSerializers, CustomerSerializer, ProjectManagerSerializer, DeveloperSerializer, ProductSerializer,ProjectSerializer
+from .serializers import CustomUserSerializers,CustomUserloginSerializers, CustomerSerializer, ProjectManagerSerializer, DeveloperSerializer, ProductSerializer,ProjectSerializer, ProjectManagerSerializer2
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -196,6 +196,7 @@ class CustomerView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
     def delete(self, request, pk = None, format=None):
 
         # id = request.GET.get('id')
@@ -315,6 +316,7 @@ def custom_authentication_required(view_func):
     def wrapper(request, *args, **kwargs):
         print('===user==',request.user)
 
+        # if not CustomUser.objects.filter(email = request.user).exists():
         if not CustomUser.objects.filter(email = '22developer1@gmail.com').exists():  # try role wise user
 
             return Response(
@@ -344,6 +346,74 @@ def demo_decorators(request):
 
 # ======Custom decorators ===============================================================================
 
+    
+
+class Selected_related(APIView) :       #  select_related when working with ForeignKey or OneToOneField 
+
+    # permission_classes = [IsAuthenticated]
+
+    def get(self, request) :
+
+        # prj_data = Project.objects.all()                      # this ORM background 2 query execute
+
+        # prj_data = Project.objects.select_related('project_manager__user').all()    #this ORM background 1 query execute
+
+        # prj_data = Project.objects.select_related('project_manager__user').filter(project_manager__user__email = 'mayank@gmail.com') 
+                         # Model name : 'Project' (project_manager__user__email) : project_manager --> user --> email
+
+        # prj_data = Project.objects.select_related('developers__user').filter(developers__user__email = 'developer2@gmail.com')
+
+        prj_data = Project.objects.select_related('developers__user').filter(developers__expertise = 'Python')
+
+        # prj_data = Project.objects.select_related('developers__user').get(developers__user__email = 'developer2@gmail.com')
+
+        # prj_data = Project.objects.prefetch_related('project_manager').all()
+
+        print('====prj_data2=====',prj_data)
+        # print('====prj_data3=====',prj_data.developers)
+        # print('====prj_data4=====',prj_data.developers.user.f_name)
+
+
+        # if prj_data:
+        #     print('====ififi')
+
+        # else:
+        #     print('======elseelse')    
+
+        # for i in prj_data:
+        #     print('==i==',i.name,' : ',i.project_manager.user.f_name,': ',i.developers.user.f_name)
+            
+        return Response({'data' : 'fatched working'})    
+
+
+class Prefetch_related(APIView):
+
+    # def get(self,request):            # Reverse foreign key
+
+        # proj_manger = ProjectManager.objects.prefetch_related('project').all()
+        # proj_manger = ProjectManager.objects.prefetch_related('project').get(id = 2)
+
+        # serializer = ProjectManagerSerializer2(proj_manger)         # use Many = True if all()
+
+        # return Response({'messge' : 'succes','data' : serializer.data})
+
+
+    def get(self,request):
+        # data = Project.objects.all()
+        # data = Project.objects.prefetch_related('project_manager')
+        data = Project.objects.prefetch_related('project_manager__user').filter(project_manager__user__email = 'samip@gmail.com')
+
+        # data = Project.objects.prefetch_related('project_manager__user').get(project_manager__user__email = 'samip@gmail.com')
+        # data = Project.objects.prefetch_related('developers').all()
+        # data = Project.objects.prefetch_related('project_manager').get(id = 3)
+
+        print('============data====',data)
+        serializer = ProjectSerializer(data, many = True)
+
+        # for i in data:
+        #     print('==ii==',i.developers.user.email)
+
+        return Response({'message':'Get data successfully','data' : serializer.data})
 
 
 class Pagination1(APIView):     # Pagination : 1
@@ -366,44 +436,6 @@ class Pagination1(APIView):     # Pagination : 1
 
         print('===serializer=11==',serializer.data)
         return Response(serializer.data)
-    
-
-class Selected_related(APIView) :       #  select_related when working with ForeignKey or OneToOneField 
-
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request) :
-
-        # prj_data = Project.objects.all()                      # this ORM background 2 query execute
-
-        prj_data = Project.objects.select_related('project_manager__user')    #this ORM background 1 query execute
-
-        # prj_data = Project.objects.select_related('project_manager__user').filter(project_manager__user__email = 'mayank@gmail.com') 
-                         # Model name : 'Project' (project_manager__user__email) : project_manager --> user --> email
-
-        # prj_data = Project.objects.select_related('developers__user').filter(developers__user__email = 'developer2@gmail.com')
-
-        # prj_data = Project.objects.select_related('developers__user').filter(developers__expertise = 'Python')
-
-        prj_data = Project.objects.select_related('developers__user').get(developers__user__email = 'developer2@gmail.com')
-
-        # prj_data = Project.objects.prefetch_related('project_manager').all()
-
-        print('====prj_data2=====',prj_data)
-        print('====prj_data3=====',prj_data.developers)
-        print('====prj_data4=====',prj_data.developers.user.f_name)
-
-
-        # if prj_data:
-        #     print('====ififi')
-
-        # else:
-        #     print('======elseelse')    
-
-        # for i in prj_data:
-        #     print('==i==',i.name,' : ',i.project_manager.user.f_name,': ',i.developers.user.f_name)
-            
-        return Response({'data' : 'fatched working'})    
 
     
 
@@ -413,14 +445,14 @@ class Pagination2(APIView):         # Pagination : 2
 
     def get(self, request):         
 
-        queryset = Customers.objects.all()
+        # queryset = CustomUser.objects.all()
+        queryset = CustomUser.objects.select_related().all()
         paginator = self.pagination_class()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         
-        serializer = CustomerSerializer(paginated_queryset, many=True)
+        serializer = CustomUserSerializers(paginated_queryset, many=True)
         
         return paginator.get_paginated_response(serializer.data)
-
 
 
 class get_foreign_data(APIView):

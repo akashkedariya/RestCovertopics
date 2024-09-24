@@ -19,6 +19,7 @@ urlpatterns = [
     path('developer_ud/<int:id>/',views.DeveloperUD.as_view()),
 
     path('select-related/',views.Selected_related.as_view()),
+    path('prefetch_related/',views.Prefetch_related.as_view()),
     path('add-customer/<int:pk>/',views.CustomerView.as_view()),
 
     path('demo_decorator/',views.demo_decorators),

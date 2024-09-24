@@ -104,3 +104,18 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = ['name','description','project_manager', 'developers']            
 
         
+# ===--Reverse Prefetch Related--=====================================================================================
+
+class ProjectSerializer2(serializers.ModelSerializer):
+    class Meta :
+        model = Project
+        fields = ['name','description','project_manager', 'developers'] 
+
+class ProjectManagerSerializer2(serializers.ModelSerializer):
+    project = ProjectSerializer2(many = True)
+    class Meta :
+        model = ProjectManager
+        fields = ['user', 'department','project']        
+
+
+# ==============================================================================================================        
