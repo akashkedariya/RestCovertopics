@@ -437,6 +437,7 @@ class Pagination1(APIView):     # Pagination : 1
         print('===serializer=11==',serializer.data)
         return Response(serializer.data)
 
+
     
 
 class Pagination2(APIView):         # Pagination : 2  
