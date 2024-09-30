@@ -2,6 +2,11 @@ from rest_framework import serializers
 from .models import CustomUser, Customers, Product, Project, ProjectManager, Developer
 
 
+class DemobookSerializer(serializers.Serializer):
+    book_name = serializers.CharField(max_length = 50)
+    author_name = serializers.CharField()
+    price = serializers.IntegerField()
+
 
 class CustomUserSerializers(serializers.ModelSerializer) :
     class Meta :

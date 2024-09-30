@@ -1,10 +1,10 @@
 from django.shortcuts import render
-from .models import CustomUser, Customers, Product, Project, ProjectManager, Developer
-from .serializers import CustomUserSerializers,CustomUserloginSerializers, CustomerSerializer, ProjectManagerSerializer, DeveloperSerializer, ProductSerializer,ProjectSerializer, ProjectManagerSerializer2
+from .models import CustomUser, Customers, Product, Project, ProjectManager, Developer, Teacher, Student, Student2, Employee, EmployeeProxy
+from .serializers import CustomUserSerializers,CustomUserloginSerializers, CustomerSerializer, ProjectManagerSerializer, DeveloperSerializer, ProductSerializer,ProjectSerializer, ProjectManagerSerializer2, DemobookSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -15,10 +15,21 @@ from .pagination import CustomPageNumberPagination
 from rest_framework.pagination import PageNumberPagination
 # from .pagination import CustomPageNumberPagination
 from django.db.models import Count
-from django.db.models import Sum, Avg, Max
+from django.db.models import Sum, Avg, Max, Min
 from rest_framework.decorators import api_view
 
 
+@api_view(['POST'])
+def book_demo(request):
+    if request.method == 'POST':
+        data = request.data
+        print('======rrrr===',data['book_name'])
+        serializer = DemobookSerializer(data = request.data)
+
+        # if serializer.is_valid():
+        #     serializer.save()
+
+        return Response({'message':'success'})
 
 
 
@@ -29,6 +40,7 @@ def get_tokens_for_user(user):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
+
 
 
 class Customuserregister(APIView):
@@ -51,7 +63,8 @@ class Customuserregister(APIView):
             return Response({'token' : token,'user' : serializer.data}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 
 class Loginuser(APIView) :
 
@@ -66,9 +79,7 @@ class Loginuser(APIView) :
             user = authenticate(email=email,password=password)
 
             if user is not None:
-
                 token = get_tokens_for_user(user)
-
                 return Response({'msg':'login success','token':token},status=status.HTTP_200_OK)
             
             else:
@@ -181,8 +192,8 @@ class CustomerView(APIView):
         if serializer.is_valid():
             serializer.save()
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)     
     
     def put(self, request, pk = None, format=None):
 
@@ -326,14 +337,15 @@ def custom_authentication_required(view_func):
         return view_func(request)
     return wrapper        
 
-# ----CBV-----------------------------------------------------
+
+# ----CBV -----------------------------------------------------
 
 class DecoratorsAPI(APIView):
     @method_decorator(custom_authentication_required)
     def get(self,request):
 
         return Response({'User': 'User success'})    
-    
+
 
 # ----FBV-----------------------------------------------------
 
@@ -344,9 +356,26 @@ def demo_decorators(request):
 
         return Response({'msg' : 'success '})
 
-# ======Custom decorators ===============================================================================
 
-    
+# ======Custom decorators ===============================================================================
+# from django.views import View
+# from django.http import JsonResponse
+# from django.utils.decorators import method_decorator
+# from django.views.decorators.csrf import csrf_exempt
+
+
+# @method_decorator(csrf_exempt, name='dispatch')
+# class MyAPIView(View):
+#     def post(self, request, *args, **kwargs):
+#         # Process your data here
+#         data = request.POST
+
+#         print('=========data==',data)
+
+#         # Example response
+#         return Response({'message': 'Data received', 'data': 'data'})    
+
+
 
 class Selected_related(APIView) :       #  select_related when working with ForeignKey or OneToOneField 
 
@@ -407,7 +436,10 @@ class Prefetch_related(APIView):
         # data = Project.objects.prefetch_related('developers').all()
         # data = Project.objects.prefetch_related('project_manager').get(id = 3)
 
-        print('============data====',data)
+        # result_data = Project.objects.all().aggregate(Sum('developers_id'))
+        # result_data = Project.objects.get(name__exact = 'HRMS')
+        result_data = Project.objects.filter(id__gt = 5,id__lt = 9)
+        print('============data====',result_data)
         serializer = ProjectSerializer(data, many = True)
 
         # for i in data:
@@ -438,7 +470,6 @@ class Pagination1(APIView):     # Pagination : 1
         return Response(serializer.data)
 
 
-    
 
 class Pagination2(APIView):         # Pagination : 2  
                     
@@ -462,21 +493,64 @@ class get_foreign_data(APIView):
     def get(self, request):
         # We fetch the Project based on the user's email in one query
         try:
-            print('===request.user===',request.user.id)
-
+            # print('===request.user===',request.user)
 
             # proj_user = Project.objects.select_related(
             #     'project_manager__user' 
             # ).get(project_manager__user__email=request.user.email) 
-             
-            proj_user = Project.objects.select_related('project_manager__user').filter(
-            project_manager__user__email=request.user.email)
-            print('====proj_user=======',proj_user)
-            return Response({'project': 'proj_user'}, status=status.HTTP_200_OK)
+                   
+            proj_user = Project.objects.select_related('project_manager__user').filter(project_manager__user__email=request.user.email)
+            # print('====proj_user=======',proj_user)
 
+            project_user_list = []
+
+            for pm in proj_user :
+                # print('=====pm===',pm)
+                dict = {
+                'manager name' : pm.project_manager.user.f_name,
+                'project name' : pm.name,
+                'decription' : pm.description,
+                'developer' : {
+                    'name' : pm.developers.user.f_name,
+                    'email' : pm.developers.user.email,
+                    'expertise' : pm.developers.expertise,
+                }
+
+                }
+                project_user_list.append(dict)
+
+            return Response({'projects': project_user_list}, status=status.HTTP_200_OK)
+                                                                        
         except Project.DoesNotExist:
             return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
+        
 
+class ModelInheritance(APIView):
+
+    def post(self, request):
+
+        # student = Student.objects.create(name="Hiren", roll_number="102")
+        # teacher = Teacher.objects.create(name="Pritesh", subject="Science") 
+
+        # student = Student2.objects.create(name="Alice", age=20, roll_number="101", class_year=2023)
+        # student = Student2.objects.create(roll_number="101", class_year=2023)
+
+        # person = Employee.objects.create(name="Brien", age=25)
+
+        data = Employee.objects.all()
+       
+        for i in data :
+            print('===ii==',i.age)
+            print('===ii==',i.name)
+
+        return Response({'data':'success'})       
+
+
+
+class ProductViewset(viewsets.ModelViewSet):
+
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
 
 
 class get_foreign_data2(APIView) :

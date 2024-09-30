@@ -143,5 +143,73 @@ class Project(models.Model):
     project_manager = models.ForeignKey(ProjectManager, on_delete=models.CASCADE,related_name = 'project')
     developers = models.ForeignKey(Developer, on_delete=models.CASCADE)
 
-    def __str__(self):                                              
+    # def __str__(self):                                              
+    #     return self.name
+
+
+
+# =========Model Inheritance==============================================================================================================
+# 1. Abstract Base Classes
+
+from django.db import models
+
+class CommonInfo(models.Model):
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True  # No table will be created for this model
+
+class Student(CommonInfo):
+    roll_number = models.CharField(max_length=50)
+
+class Teacher(CommonInfo):
+    subject = models.CharField(max_length=50)
+
+
+# === Final table Student & Teacher ============================================
+#  OUTPUT :
+#         Student : name , created_at, roll_number
+#         Teacher : name, created_at, subject
+
+
+# =======Like Foreign Key===================================================================================================================================
+# 2. Multi-table Inheritance
+
+class Person(models.Model):
+    name = models.CharField(max_length=100)
+    age = models.IntegerField()
+
+class Student2(Person):
+    roll_number = models.CharField(max_length=50)
+    class_year = models.IntegerField()
+
+
+# student = Student2.objects.create(name="Alice", age=20, roll_number="101", class_year=2023)
+
+# OUTPUT : 
+# Person : id, name, and age
+# Student2 : person_ptr_id, roll_number, class_year.    
+# Student2 : id (a foreign key to 'Person'), roll_number,  class_year    # OR
+
+
+# =============================================================================================================================================
+# 3. Proxy Models
+
+class Employee(models.Model):
+    name = models.CharField(max_length=100)
+    age = models.IntegerField()
+
+    def __str__(self):
         return self.name
+    
+
+class EmployeeProxy(Person):
+    class Meta:
+        proxy = True  # No new table will be created
+        ordering = ['age']  # Order by age
+
+    def get_name_with_age(self):
+        return f"{self.name} ({self.age})"
+
+

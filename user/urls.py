@@ -1,9 +1,16 @@
 from . import views
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+# from .views import ProductViewset
+from user import views 
 
-# ItemList
+router = DefaultRouter()
+router.register('product_viewset', views.ProductViewset)
+
+
 
 urlpatterns = [  
+    path('demo-book/',views.book_demo),
     path('register/', views.Customuserregister.as_view()),  
     path('login/',views.Loginuser.as_view()),
     path('test/',views.ExampleView.as_view()),
@@ -27,7 +34,11 @@ urlpatterns = [
 
     path('pagination1/', views.Pagination1.as_view()),
     path('pagination2/',views.Pagination2.as_view()),
-    path('foreign_data/',views.get_foreign_data.as_view())
+    path('foreign_data/',views.get_foreign_data.as_view()),
+    path('test_data/',views.ModelInheritance.as_view()),
+
+    # path('api/',include(router.urls)),
+    path('', include(router.urls)),
     
 
 ]
